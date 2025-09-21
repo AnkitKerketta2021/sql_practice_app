@@ -359,18 +359,6 @@ function renderStart() {
     ensureTimePill(); setPills();
 }
 
-
-// function shuffle(arr) {
-//     // Fisher–Yates
-//     const a = [...arr];
-//     for (let i = a.length - 1; i > 0; i--) {
-//         const j = Math.floor(Math.random() * (i + 1));
-//         [a[i], a[j]] = [a[j], a[i]];
-//     }
-//     return a;
-// }
-// function pickN(arr, n) { return shuffle(arr).slice(0, n); }
-
 function getActiveBank() {
     // Pick the current question bank based on selected difficulty
     const easy = (typeof EASY_BANK !== 'undefined') ? EASY_BANK : [];
@@ -390,84 +378,6 @@ function getActiveBank() {
     const adv = (typeof ADV_BANK !== 'undefined') ? ADV_BANK : [];
     return (state.difficulty === 'advanced') ? adv : easy;
 }
-
-// ---------- Screens ----------
-// function renderStart() {
-//     // ensure difficulty exists
-//     if (!('difficulty' in state)) state.difficulty = 'easy';
-
-//     const baseLengths = [10, 20, 30];
-//     let selectedLen = null;
-
-//     // compute allowed lengths for currently selected difficulty
-//     const allowedLengths = () => {
-//         const max = getActiveBank().length;
-//         return baseLengths.map(n => Math.min(n, max)).filter(n => n > 0);
-//     };
-
-//     const renderLengthsButtons = () =>
-//         allowedLengths().map(n => `<button class="chip" data-len="${n}">${n} Questions</button>`).join('');
-
-//     const html = `
-// <section class="start">
-//   <h2>Practice SQL MCQs</h2>
-//   <p>Choose difficulty and how many questions you want to practice.</p>
-
-//   <div class="lengths" id="diffs" style="margin-bottom:6px">
-//     <button class="chip" data-diff="easy" ${state.difficulty === 'easy' ? 'data-selected="true"' : ''}>Easy</button>
-//     <button class="chip" data-diff="advanced" ${state.difficulty === 'advanced' ? 'data-selected="true"' : ''}>Advanced</button>
-//   </div>
-
-//   <div class="lengths" id="lengths">
-//     ${renderLengthsButtons()}
-//   </div>
-
-//   <div>
-//     <button class="btn" id="startBtn" disabled>Start Quiz</button>
-//   </div>
-
-//   <div style="margin-top:8px; color:var(--muted); font-size:12px;">
-//     Tip: Use <span class="kbd">A</span>/<span class="kbd">B</span>/<span class="kbd">C</span>/<span class="kbd">D</span> to answer, and <span class="kbd">N</span> for Next.
-//   </div>
-// </section>
-// `;
-//     $('#screen').innerHTML = html;
-
-//     const lengthsEl = $('#lengths');
-
-//     // wire up length buttons
-//     function wireLengthClicks() {
-//         lengthsEl.addEventListener('click', (e) => {
-//             const btn = e.target.closest('.chip');
-//             if (!btn) return;
-//             [...lengthsEl.querySelectorAll('.chip')].forEach(x => x.dataset.selected = "false");
-//             btn.dataset.selected = "true";
-//             selectedLen = parseInt(btn.dataset.len, 10);
-//             $('#startBtn').disabled = false;
-//         }, { once: true });
-//     }
-//     wireLengthClicks();
-
-//     // difficulty switch
-//     $('#diffs').addEventListener('click', (e) => {
-//         const btn = e.target.closest('.chip');
-//         if (!btn) return;
-//         [...document.querySelectorAll('#diffs .chip')].forEach(x => x.dataset.selected = "false");
-//         btn.dataset.selected = "true";
-//         state.difficulty = btn.dataset.diff;
-
-//         // reset selection and re-render lengths for this difficulty
-//         selectedLen = null;
-//         $('#startBtn').disabled = true;
-//         lengthsEl.innerHTML = renderLengthsButtons();
-//         wireLengthClicks();
-//     });
-
-//     $('#startBtn').addEventListener('click', () => startQuiz(selectedLen));
-
-//     // Initialize pills
-//     state.idx = 0; state.total = 0; state.score = 0; state.streak = 0; setPills();
-// }
 
 function startQuiz(n, seconds) {
     const bank = getActiveBank();
