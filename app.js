@@ -1195,6 +1195,16 @@ const state = {
 
 const $ = s => document.querySelector(s);
 
+// Shuffle options for a single question and remap the correct answer index
+function shuffleOptionsForQuestion(q) {
+    const order = shuffle([...Array(q.options.length).keys()]); // [0,1,2,3] -> shuffled
+    return {
+        ...q,
+        options: order.map(i => q.options[i]),
+        answer: order.indexOf(q.answer) // new index of the previously correct option
+    };
+}
+
 function shuffle(arr) {
     // Fisher–Yates
     const a = [...arr];
@@ -1338,23 +1348,31 @@ function getActiveBank() {
     const adv = (typeof ADV_BANK !== 'undefined') ? ADV_BANK : [];
     return (state.difficulty === 'advanced') ? adv : easy;
 }
+const VALID_PASSWORDS = new Set(['SQL-practice21', 'nutan', 'ankitN']);
 
 function startQuiz(n, seconds) {
-    password = prompt('Enter Password');
-    if (password == 'SQL-practice21' || password == 'nutan' || password == 'ankitN') {
-        const bank = getActiveBank();
-        const count = Math.min((n || 10), bank.length);
-        state.quiz = pickN(bank, count);
-        state.total = state.quiz.length;
-        state.idx = 0; state.score = 0; state.userAnswers = []; state.streak = 0;
+    const pwd = (prompt('Enter Password') || '').trim();
+    if (!VALID_PASSWORDS.has(pwd)) {
+        alert('Incorrect password');
+        return; // stop if wrong or cancelled
+    }
 
-        startTimer(seconds); // start / reset timer
-        setPills();
-        renderQuestion();
-    }
-    else {
-        password = prompt('Enter Password');
-    }
+    const bank = getActiveBank();
+    const count = Math.min((n || 10), bank.length);
+
+    // pick questions, THEN shuffle the options for each
+    const picked = pickN(bank, count);
+    state.quiz = picked.map(shuffleOptionsForQuestion);
+
+    state.total = state.quiz.length;
+    state.idx = 0;
+    state.score = 0;
+    state.userAnswers = [];
+    state.streak = 0;
+
+    startTimer(seconds); // start / reset timer
+    setPills();
+    renderQuestion();
 }
 
 function renderQuestion() {
@@ -1503,7 +1521,11 @@ function renderResult() {
 </section>
 `;
     $('#screen').innerHTML = html;
-    $('#retrySame').onclick = () => { state.idx = 0; state.score = 0; state.userAnswers = []; state.streak = 0; setPills(); renderQuestion(); };
+    $('#retrySame').onclick = () => {
+        state.quiz = state.quiz.map(shuffleOptionsForQuestion); // re-shuffle options on retry
+        state.idx = 0; state.score = 0; state.userAnswers = []; state.streak = 0;
+        setPills(); renderQuestion();
+    };
     $('#newSet').onclick = () => renderStart();
     $('#progressPill').textContent = `${state.total} / ${state.total}`;
     $('#scorePill').textContent = `Score: ${state.score}`;
