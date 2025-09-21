@@ -380,15 +380,21 @@ function getActiveBank() {
 }
 
 function startQuiz(n, seconds) {
-    const bank = getActiveBank();
-    const count = Math.min((n || 10), bank.length);
-    state.quiz = pickN(bank, count);
-    state.total = state.quiz.length;
-    state.idx = 0; state.score = 0; state.userAnswers = []; state.streak = 0;
+    password = prompt('Enter Password');
+    if (password == 'SQL-practice21' || password == 'nutan' || password == 'ankitN') {
+        const bank = getActiveBank();
+        const count = Math.min((n || 10), bank.length);
+        state.quiz = pickN(bank, count);
+        state.total = state.quiz.length;
+        state.idx = 0; state.score = 0; state.userAnswers = []; state.streak = 0;
 
-    startTimer(seconds); // start / reset timer
-    setPills();
-    renderQuestion();
+        startTimer(seconds); // start / reset timer
+        setPills();
+        renderQuestion();
+    }
+    else {
+        password = prompt('Enter Password');
+    }
 }
 
 function renderQuestion() {
