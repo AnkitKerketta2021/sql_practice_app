@@ -123,24 +123,7 @@ const EASY_BANK = [
     { q: "Purpose of UPDATE?", options: ["Change existing rows", "Create database", "Drop rows", "Backup table"], answer: 0, explanation: "UPDATE modifies column values for matching rows." },
     { q: "Purpose of DELETE?", options: ["Remove table", "Remove matching rows", "Remove database", "Remove column"], answer: 1, explanation: "DELETE removes rows based on WHERE predicate." },
     { q: "COUNT(*) does what?", options: ["Counts non-NULL only", "Counts all rows", "Sums values", "Averages values"], answer: 1, explanation: "COUNT(*) counts rows regardless of NULLs." },
-    { q: "Which keyword removes duplicate rows?", options: ["UNIQUE", "DISTINCT", "ONLY", "PRIMARY"], answer: 1, explanation: "DISTINCT deduplicates results." }
-];
-
-// Advanced: query interpretation, joins, grouping, limits, DDL
-const ADV_BANK = [
-    { q: "What this Query do: SELECT * FROM Products WHERE Price BETWEEN 10 AND 20;", options: ["Selects products with price < 10 or > 20", "Selects products with price 10 to 20 inclusive", "Selects products strictly between 10 and 20", "Selects all products and sorts by price"], answer: 1, explanation: "BETWEEN is inclusive of both bounds." },
-    { q: "What this Query do: SELECT * FROM Products WHERE Price NOT BETWEEN 10 AND 20;", options: ["Only prices 10 or 20", "Prices <10 or >20", "Prices 10–20 inclusive", "Creates a price index"], answer: 1, explanation: "NOT BETWEEN picks values outside the range." },
-    { q: "What this Query do: SELECT * FROM Customers WHERE Country IN ('Germany','France','UK');", options: ["Customers not in those", "Only those three countries", "All customers", "Only NULL countries"], answer: 1, explanation: "IN filters to the listed set." },
-    { q: "What this Query do: SELECT * FROM Customers WHERE Country NOT IN ('Germany','France','UK');", options: ["Only those three", "All except those three", "Only NULL countries", "Sorts by country"], answer: 1, explanation: "NOT IN excludes the listed values." },
-    { q: "What this Query do: SELECT * FROM Customers WHERE CustomerID IN (SELECT CustomerID FROM Orders);", options: ["Never ordered", "Have at least one order", "All customers", "Only NULL IDs"], answer: 1, explanation: "IN + subquery yields customers with orders." },
-    { q: "What this Query do: SELECT COUNT(*) FROM Products;", options: ["Counts non-NULL names", "Counts all product rows", "Sums prices", "Counts distinct categories"], answer: 1, explanation: "COUNT(*) counts rows." },
-    { q: "What this Query do: SELECT COUNT(ProductName) FROM Products;", options: ["Counts all rows", "Counts non-NULL ProductName", "Counts distinct names", "Counts names > 'M'"], answer: 1, explanation: "COUNT(col) skips NULLs." },
-    { q: "What this Query do: SELECT COUNT(DISTINCT Price) FROM Products;", options: ["Counts all prices", "Counts unique price values", "Counts NULL prices", "Counts distinct products"], answer: 1, explanation: "DISTINCT removes duplicates before count." },
-    { q: "What this Query do: SELECT SUM(Quantity) FROM OrderDetails;", options: ["Average quantity", "Total quantity across rows", "Counts rows", "Max quantity"], answer: 1, explanation: "SUM adds values across rows." },
-    { q: "What this Query do: SELECT AVG(Price) FROM Products WHERE CategoryID = 1;", options: ["Average price for Category 1", "Average price overall", "Median price", "Max price"], answer: 0, explanation: "WHERE limits rows averaged." },
-    { q: "What this Query do: SELECT * FROM Customers WHERE CustomerName LIKE 'a%';", options: ["Ends with a", "Starts with a", "Contains a anywhere", "Equal to a"], answer: 1, explanation: "'a%' matches prefix a." },
-    { q: "What this Query do: SELECT * FROM Customers WHERE city LIKE 'L_nd__';", options: ["Lond only", "Len duo", "L + one char + nd + two chars", "L + any + any"], answer: 2, explanation: "_ matches one char; pattern has 2 trailing underscores." },
-    { q: "What this Query do: SELECT CustomerID AS ID FROM Customers;", options: ["Rename table", "Create column", "Alias CustomerID as ID in result", "Delete column"], answer: 2, explanation: "AS gives a result alias." },
+    { q: "Which keyword removes duplicate rows?", options: ["UNIQUE", "DISTINCT", "ONLY", "PRIMARY"], answer: 1, explanation: "DISTINCT deduplicates results." },
     { q: "JOIN: Orders × Customers (INNER)", options: ["All customers", "Only matching orders-customers", "Only unmatched rows", "Deletes unmatched"], answer: 1, explanation: "INNER returns matches only." },
     { q: "JOIN: Customers LEFT JOIN Orders", options: ["Only customers with orders", "All customers; orders if exist", "Only orders", "Cross join"], answer: 1, explanation: "LEFT keeps all left rows." },
     { q: "JOIN: Orders RIGHT JOIN Employees", options: ["Only orders", "All employees; orders if exist", "Only employees with orders", "No employees"], answer: 1, explanation: "RIGHT keeps all right rows (employees)." },
@@ -169,6 +152,983 @@ const ADV_BANK = [
     { q: "SELECT INTO backup", options: ["Export CSV", "Create new table with data (SQL Server/Access)", "Create view", "Grant access"], answer: 1, explanation: "SELECT INTO creates a table from result." },
     { q: "SELECT INTO with WHERE Germany", options: ["Copy all customers", "Copy only German customers into new table", "Delete German customers", "Update customers"], answer: 1, explanation: "Filtered copy into new table." },
     { q: "EXISTS subquery (Price < 20)", options: ["Suppliers with no products", "Suppliers with at least one product priced < 20", "All suppliers", "Only expensive suppliers"], answer: 1, explanation: "EXISTS passes when subquery returns any row." }
+];
+
+// Advanced: query interpretation, joins, grouping, limits, DDL
+const ADV_BANK = [
+    { q: "What this Query do: SELECT * FROM Products WHERE Price BETWEEN 10 AND 20;", options: ["Selects products with price < 10 or > 20", "Selects products with price 10 to 20 inclusive", "Selects products strictly between 10 and 20", "Selects all products and sorts by price"], answer: 1, explanation: "BETWEEN is inclusive of both bounds." },
+    { q: "What this Query do: SELECT * FROM Products WHERE Price NOT BETWEEN 10 AND 20;", options: ["Only prices 10 or 20", "Prices <10 or >20", "Prices 10–20 inclusive", "Creates a price index"], answer: 1, explanation: "NOT BETWEEN picks values outside the range." },
+    { q: "What this Query do: SELECT * FROM Customers WHERE Country IN ('Germany','France','UK');", options: ["Customers not in those", "Only those three countries", "All customers", "Only NULL countries"], answer: 1, explanation: "IN filters to the listed set." },
+    { q: "What this Query do: SELECT * FROM Customers WHERE Country NOT IN ('Germany','France','UK');", options: ["Only those three", "All except those three", "Only NULL countries", "Sorts by country"], answer: 1, explanation: "NOT IN excludes the listed values." },
+    { q: "What this Query do: SELECT * FROM Customers WHERE CustomerID IN (SELECT CustomerID FROM Orders);", options: ["Never ordered", "Have at least one order", "All customers", "Only NULL IDs"], answer: 1, explanation: "IN + subquery yields customers with orders." },
+    { q: "What this Query do: SELECT COUNT(*) FROM Products;", options: ["Counts non-NULL names", "Counts all product rows", "Sums prices", "Counts distinct categories"], answer: 1, explanation: "COUNT(*) counts rows." },
+    { q: "What this Query do: SELECT COUNT(ProductName) FROM Products;", options: ["Counts all rows", "Counts non-NULL ProductName", "Counts distinct names", "Counts names > 'M'"], answer: 1, explanation: "COUNT(col) skips NULLs." },
+    { q: "What this Query do: SELECT COUNT(DISTINCT Price) FROM Products;", options: ["Counts all prices", "Counts unique price values", "Counts NULL prices", "Counts distinct products"], answer: 1, explanation: "DISTINCT removes duplicates before count." },
+    { q: "What this Query do: SELECT SUM(Quantity) FROM OrderDetails;", options: ["Average quantity", "Total quantity across rows", "Counts rows", "Max quantity"], answer: 1, explanation: "SUM adds values across rows." },
+    { q: "What this Query do: SELECT AVG(Price) FROM Products WHERE CategoryID = 1;", options: ["Average price for Category 1", "Average price overall", "Median price", "Max price"], answer: 0, explanation: "WHERE limits rows averaged." },
+    { q: "What this Query do: SELECT * FROM Customers WHERE CustomerName LIKE 'a%';", options: ["Ends with a", "Starts with a", "Contains a anywhere", "Equal to a"], answer: 1, explanation: "'a%' matches prefix a." },
+    { q: "What this Query do: SELECT * FROM Customers WHERE city LIKE 'L_nd__';", options: ["Lond only", "Len duo", "L + one char + nd + two chars", "L + any + any"], answer: 2, explanation: "_ matches one char; pattern has 2 trailing underscores." },
+    { q: "What this Query do: SELECT CustomerID AS ID FROM Customers;", options: ["Rename table", "Create column", "Alias CustomerID as ID in result", "Delete column"], answer: 2, explanation: "AS gives a result alias." },
+    // 106
+    {
+        q: "What this Query do: SELECT * FROM Products WHERE Price BETWEEN 10 AND 20;",
+        options: [
+            "Selects products with price < 10 or > 20",
+            "Selects products priced 10 to 20 (inclusive)",
+            "Selects products priced strictly >10 and <20 (exclusive)",
+            "Selects all products and sorts by price"
+        ],
+        answer: 1,
+        explanation: "BETWEEN is inclusive of both bounds (10 and 20)."
+    },
+    // 107
+    {
+        q: "What this Query do: SELECT * FROM Products WHERE Price NOT BETWEEN 10 AND 20;",
+        options: [
+            "Selects only products priced 10 or 20",
+            "Selects products priced <10 or >20",
+            "Selects products priced strictly >10 and <20",
+            "Creates a price index"
+        ],
+        answer: 1,
+        explanation: "NOT BETWEEN returns rows outside the inclusive 10–20 range."
+    },
+    // 108
+    {
+        q: "What this Query do: SELECT * FROM Products WHERE Price BETWEEN 10 AND 20 AND CategoryID IN (1,2,3);",
+        options: [
+            "Selects products in categories 1,2,3 with any price",
+            "Selects products priced 10–20 from categories 1,2,3",
+            "Selects products priced 10–20 from all categories",
+            "Selects only CategoryID 1 with price 10–20"
+        ],
+        answer: 1,
+        explanation: "Both conditions must hold: price in 10–20 and CategoryID ∈ {1,2,3}."
+    },
+    // 109
+    {
+        q: "What this Query do: SELECT * FROM Customers WHERE Country IN ('Germany', 'France', 'UK');",
+        options: [
+            "Selects customers from any country except the three listed",
+            "Selects customers from Germany, France, or the UK",
+            "Selects only NULL countries",
+            "Drops unmatched customers"
+        ],
+        answer: 1,
+        explanation: "IN matches any of the listed values."
+    },
+    // 110
+    {
+        q: "What this Query do: SELECT * FROM Customers WHERE Country NOT IN ('Germany', 'France', 'UK');",
+        options: [
+            "Selects only those three countries",
+            "Selects every country except Germany, France, and the UK",
+            "Selects only customers with Country = NULL",
+            "Sorts by Country"
+        ],
+        answer: 1,
+        explanation: "NOT IN excludes the listed values (NULLs do not pass the predicate)."
+    },
+    // 111
+    {
+        q: "What this Query do: SELECT * FROM Customers WHERE CustomerID IN (SELECT CustomerID FROM Orders);",
+        options: [
+            "Returns customers who never placed any order",
+            "Returns customers who have at least one order",
+            "Returns all customers",
+            "Returns only customers with NULL CustomerID"
+        ],
+        answer: 1,
+        explanation: "The subquery yields IDs with orders; IN keeps those customers."
+    },
+    // 112
+    {
+        q: "What this Query do: SELECT COUNT(*) FROM Products;",
+        options: [
+            "Counts non-NULL product names",
+            "Counts all product rows",
+            "Counts distinct categories",
+            "Sums product prices"
+        ],
+        answer: 1,
+        explanation: "COUNT(*) counts rows regardless of NULLs."
+    },
+    // 113
+    {
+        q: "What this Query do: SELECT COUNT(ProductName) FROM Products;",
+        options: [
+            "Counts all rows",
+            "Counts rows where ProductName is NOT NULL",
+            "Counts distinct product names",
+            "Counts names starting with 'P'"
+        ],
+        answer: 1,
+        explanation: "COUNT(col) ignores NULLs."
+    },
+    // 114
+    {
+        q: "What this Query do: SELECT COUNT(ProductID) FROM Products WHERE Price > 20;",
+        options: [
+            "Counts all products",
+            "Counts products priced > 20 (with non-NULL ProductID)",
+            "Counts products priced ≤ 20",
+            "Counts distinct ProductID overall"
+        ],
+        answer: 1,
+        explanation: "Filtered by WHERE, then COUNT(ProductID) (usually non-NULL in PK)."
+    },
+    // 115
+    {
+        q: "What this Query do: SELECT COUNT(DISTINCT Price) FROM Products;",
+        options: [
+            "Counts all price values",
+            "Counts unique price values",
+            "Counts only NULL prices",
+            "Counts distinct products"
+        ],
+        answer: 1,
+        explanation: "DISTINCT removes duplicates before counting."
+    },
+    // 116
+    {
+        q: "What this Query do: SELECT SUM(Quantity) FROM OrderDetails;",
+        options: [
+            "Averages quantity",
+            "Totals quantity across all rows",
+            "Counts rows",
+            "Returns the maximum quantity"
+        ],
+        answer: 1,
+        explanation: "SUM aggregates numeric values."
+    },
+    // 117
+    {
+        q: "What this Query do: SELECT SUM(Quantity) FROM OrderDetails WHERE ProductId = 11;",
+        options: [
+            "Sums all products' quantity",
+            "Sums quantity only for ProductId = 11",
+            "Returns ProductId with highest quantity",
+            "Counts orders for ProductId = 11"
+        ],
+        answer: 1,
+        explanation: "WHERE limits rows summed."
+    },
+    // 118
+    {
+        q: "What this Query do: SELECT SUM(Quantity) AS total FROM OrderDetails;",
+        options: [
+            "Creates a new column in the table",
+            "Returns the sum labeled as total",
+            "Returns individual quantities",
+            "Returns average quantity"
+        ],
+        answer: 1,
+        explanation: "AS total is a result-set alias."
+    },
+    // 119
+    {
+        q: "What this Query do: SELECT AVG(Price) FROM Products;",
+        options: [
+            "Returns sum of prices",
+            "Returns average price across all products",
+            "Returns maximum price",
+            "Returns count of products"
+        ],
+        answer: 1,
+        explanation: "AVG computes mean value."
+    },
+    // 120
+    {
+        q: "What this Query do: SELECT AVG(Price) FROM Products WHERE CategoryID = 1;",
+        options: [
+            "Average price for CategoryID = 1 only",
+            "Average price for all categories",
+            "Median price for CategoryID = 1",
+            "Maximum price for CategoryID = 1"
+        ],
+        answer: 0,
+        explanation: "WHERE restricts rows included in the average."
+    },
+    // 121
+    {
+        q: "What this Query do: SELECT * FROM Customers WHERE CustomerName LIKE 'a%';",
+        options: [
+            "Name ends with 'a'",
+            "Name starts with 'a'",
+            "Name contains 'a' anywhere",
+            "Name equals 'a'"
+        ],
+        answer: 1,
+        explanation: "'a%' is a prefix match."
+    },
+    // 122
+    {
+        q: "What this Query do: SELECT * FROM Customers WHERE city LIKE 'L_nd__';",
+        options: [
+            "Matches any city starting with 'L'",
+            "Matches cities with 'Lnd' anywhere",
+            "Matches 'L' + one char + 'nd' + two chars",
+            "Equals 'L_nd__'"
+        ],
+        answer: 2,
+        explanation: "_ matches one character; pattern has two trailing underscores."
+    },
+    // 123
+    {
+        q: "What this Query do: SELECT CustomerID AS ID FROM Customers;",
+        options: [
+            "Creates new column 'ID' in table",
+            "Aliases CustomerID as ID in result",
+            "Deletes CustomerID",
+            "Renames table"
+        ],
+        answer: 1,
+        explanation: "AS creates a result alias."
+    },
+    // 124
+    {
+        q: "What this Query do: SELECT CustomerID ID FROM Customers;",
+        options: [
+            "Same as aliasing CustomerID as ID",
+            "Syntax error in all SQL",
+            "Creates physical column ID",
+            "Selects only ID rows"
+        ],
+        answer: 0,
+        explanation: "Most SQL dialects allow SELECT expr alias without AS."
+    },
+    // 125
+    {
+        q: "What this Query do: SELECT CustomerID AS ID, CustomerName AS Customer FROM Customers;",
+        options: [
+            "Creates two columns on disk",
+            "Returns aliased columns ID and Customer",
+            "Deletes CustomerName",
+            "Renames table to Customers2"
+        ],
+        answer: 1,
+        explanation: "Aliasing affects only the result column names."
+    },
+    // 126
+    {
+        q: "What this Query do: SELECT Orders.OrderID, Customers.CustomerName, Orders.OrderDate FROM Orders INNER JOIN Customers ON Orders.CustomerID=Customers.CustomerID;",
+        options: [
+            "Returns all customers regardless of orders",
+            "Returns only matching orders with their customer names",
+            "Returns only unmatched rows",
+            "Deletes unmatched rows"
+        ],
+        answer: 1,
+        explanation: "INNER JOIN returns rows present on both sides per join condition."
+    },
+    // 127
+    {
+        q: "What this Query do: SELECT ProductID, ProductName, CategoryName FROM Products INNER JOIN Categories ON Products.CategoryID = Categories.CategoryID;",
+        options: [
+            "Returns only products without a category",
+            "Returns matching products with their category name",
+            "Returns all categories with NULL products",
+            "Creates a materialized view"
+        ],
+        answer: 1,
+        explanation: "INNER JOIN keeps matches only."
+    },
+    // 128
+    {
+        q: "What this Query do: SELECT Products.ProductID, Products.ProductName, Categories.CategoryName FROM Products INNER JOIN Categories ON Products.CategoryID = Categories.CategoryID;",
+        options: [
+            "Different from 127: returns unmatched rows too",
+            "Same as 127 but with fully-qualified column names",
+            "Creates a new table",
+            "Groups by category"
+        ],
+        answer: 1,
+        explanation: "Qualification doesn't change the join semantics."
+    },
+    // 129
+    {
+        q: "What this Query do: SELECT Products.ProductID, Products.ProductName, Categories.CategoryName FROM Products JOIN Categories ON Products.CategoryID = Categories.CategoryID;",
+        options: [
+            "LEFT JOIN semantics",
+            "RIGHT JOIN semantics",
+            "Same as INNER JOIN",
+            "FULL OUTER JOIN semantics"
+        ],
+        answer: 2,
+        explanation: "JOIN without modifier defaults to INNER JOIN in most dialects."
+    },
+    // 130
+    {
+        q: "What this Query do: SELECT Customers.CustomerName, Orders.OrderID FROM Customers LEFT JOIN Orders ON Customers.CustomerID = Orders.CustomerID ORDER BY Customers.CustomerName;",
+        options: [
+            "Only customers that have orders",
+            "All customers; orders if present, else NULLs",
+            "Only orders without customers",
+            "Deletes NULL orders"
+        ],
+        answer: 1,
+        explanation: "LEFT JOIN keeps all left rows; unmatched right side is NULL."
+    },
+    // 131
+    {
+        q: "What this Query do: SELECT Orders.OrderID, Employees.LastName, Employees.FirstName FROM Orders RIGHT JOIN Employees ON Orders.EmployeeID = Employees.EmployeeID ORDER BY Orders.OrderID;",
+        options: [
+            "Only employees with orders",
+            "All employees; orders if present",
+            "All orders; employees if present",
+            "Drops employees without orders"
+        ],
+        answer: 1,
+        explanation: "RIGHT JOIN keeps all right rows (employees)."
+    },
+    // 132
+    {
+        q: "What this Query do: SELECT Customers.CustomerName, Orders.OrderID FROM Customers FULL OUTER JOIN Orders ON Customers.CustomerID=Orders.CustomerID ORDER BY Customers.CustomerName;",
+        options: [
+            "Only rows that match between tables",
+            "All rows from both tables; matches where possible",
+            "Left table only",
+            "Right table only"
+        ],
+        answer: 1,
+        explanation: "FULL OUTER JOIN = left + right with matches and unmatched."
+    },
+    // 133
+    {
+        q: "What this Query do: SELECT COUNT(CustomerID), Country FROM Customers GROUP BY Country;",
+        options: [
+            "Counts countries overall",
+            "Counts customers per country",
+            "Counts distinct countries only",
+            "Sums CustomerID"
+        ],
+        answer: 1,
+        explanation: "One row per country with its customer count."
+    },
+    // 134
+    {
+        q: "What this Query do: SELECT COUNT(CustomerID), Country FROM Customers GROUP BY Country ORDER BY COUNT(CustomerID) DESC;",
+        options: [
+            "Counts and sorts countries by descending count",
+            "Sorts alphabetically by country",
+            "Filters to count > 5",
+            "Removes duplicates"
+        ],
+        answer: 0,
+        explanation: "ORDER BY the aggregate value descending."
+    },
+    // 135
+    {
+        q: "What this Query do: SELECT COUNT(CustomerID), Country FROM Customers GROUP BY Country HAVING COUNT(CustomerID) > 5;",
+        options: [
+            "Filters rows before grouping",
+            "Filters groups where the count > 5",
+            "Sorts groups",
+            "Creates index on country"
+        ],
+        answer: 1,
+        explanation: "HAVING filters after aggregation."
+    },
+    // 136
+    {
+        q: "What this Query do: SELECT COUNT(CustomerID), Country FROM Customers GROUP BY Country HAVING COUNT(CustomerID) > 5 ORDER BY COUNT(CustomerID) DESC;",
+        options: [
+            "Count, filter groups > 5, sort descending",
+            "Filter rows > 5, then group",
+            "Return all groups unsorted",
+            "Create a view"
+        ],
+        answer: 0,
+        explanation: "Typical GROUP BY + HAVING + ORDER BY pipeline."
+    },
+    // 137
+    {
+        q: "What this Query do: SELECT TOP 3 * FROM Customers;",
+        options: [
+            "Returns last 3 rows",
+            "Returns first 3 rows (SQL Server/Access)",
+            "Returns 3 columns",
+            "Deletes 3 rows"
+        ],
+        answer: 1,
+        explanation: "TOP limits rows in SQL Server/Access; order depends on ORDER BY."
+    },
+    // 138
+    {
+        q: "What this Query do: SELECT * FROM Customers LIMIT 3;",
+        options: [
+            "Returns first 3 rows (MySQL/PostgreSQL/SQLite)",
+            "Returns last 3 rows",
+            "Returns 3 columns",
+            "Creates a limit on table size"
+        ],
+        answer: 0,
+        explanation: "LIMIT is the row limiter in MySQL/PG/SQLite; pair with ORDER BY."
+    },
+    // 139
+    {
+        q: "What this Query do: DELETE FROM Customers WHERE CustomerName='Alfreds Futterkiste';",
+        options: [
+            "Deletes the Customers table",
+            "Deletes matching row(s) only",
+            "Deletes all rows",
+            "Backs up the table"
+        ],
+        answer: 1,
+        explanation: "DELETE removes rows that satisfy the predicate."
+    },
+    // 140
+    {
+        q: "What this Query do: DELETE FROM Customers;",
+        options: [
+            "Drops the table",
+            "Deletes all rows from Customers",
+            "Deletes only one row",
+            "Truncates and drops constraints"
+        ],
+        answer: 1,
+        explanation: "DELETE without WHERE removes every row (but keeps the table)."
+    },
+    // 141
+    {
+        q: "What this Query do: DROP TABLE Customers;",
+        options: [
+            "Removes all rows but not structure",
+            "Deletes the table definition and its data",
+            "Disables the table",
+            "Creates a new table"
+        ],
+        answer: 1,
+        explanation: "DROP TABLE removes the object entirely."
+    },
+    // 142
+    {
+        q: "What this Query do: UPDATE Customers SET ContactName = 'Alfred Schmidt', City= 'Frankfurt' WHERE CustomerID = 1;",
+        options: [
+            "Inserts a new row",
+            "Updates only rows with CustomerID = 1",
+            "Updates all rows",
+            "Deletes the row with CustomerID = 1"
+        ],
+        answer: 1,
+        explanation: "UPDATE modifies matching row(s) per WHERE."
+    },
+    // 143
+    {
+        q: "What this Query do: UPDATE Customers SET ContactName='Juan' WHERE Country='Mexico';",
+        options: [
+            "Updates all rows",
+            "Updates rows where Country = 'Mexico'",
+            "Deletes rows where Country = 'Mexico'",
+            "Creates column ContactName"
+        ],
+        answer: 1,
+        explanation: "Only Mexican customers are updated."
+    },
+    // 144
+    {
+        q: "What this Query do: UPDATE Customers SET ContactName='Juan';",
+        options: [
+            "Updates no rows",
+            "Updates all rows",
+            "Inserts a row",
+            "Drops the column"
+        ],
+        answer: 1,
+        explanation: "No WHERE clause → all rows are updated."
+    },
+    // 145
+    {
+        q: "What this Query do: SELECT CustomerName, ContactName, Address FROM Customers WHERE Address IS NULL;",
+        options: [
+            "Returns rows where Address equals empty string",
+            "Returns rows where Address is unknown/missing",
+            "Returns all rows",
+            "Deletes rows with NULL address"
+        ],
+        answer: 1,
+        explanation: "IS NULL tests for missing values."
+    },
+    // 146
+    {
+        q: "What this Query do: SELECT CustomerName, ContactName, Address FROM Customers WHERE Address IS NOT NULL;",
+        options: [
+            "Returns only NULL addresses",
+            "Returns rows where Address has a value",
+            "Returns all rows",
+            "Returns rows with empty strings only"
+        ],
+        answer: 1,
+        explanation: "IS NOT NULL filters to present values (empty string ≠ NULL)."
+    },
+    // 147
+    {
+        q: "What this Query do: INSERT INTO Customers (CustomerName, ContactName, Address, City, PostalCode, Country) VALUES ('Cardinal', 'Tom B. Erichsen', 'Skagen 21', 'Stavanger', '4006', 'Norway');",
+        options: [
+            "Updates matching row",
+            "Inserts one new customer row with full details",
+            "Inserts multiple rows",
+            "Creates a new table"
+        ],
+        answer: 1,
+        explanation: "INSERT INTO ... VALUES (...) adds a single row."
+    },
+    // 148
+    {
+        q: "What this Query do: INSERT INTO Customers (CustomerName, City, Country) VALUES ('Cardinal', 'Stavanger', 'Norway');",
+        options: [
+            "Fails because all columns are required",
+            "Inserts a row; other columns get defaults/NULLs",
+            "Updates existing 'Cardinal' row",
+            "Creates a view"
+        ],
+        answer: 1,
+        explanation: "Omitted columns take defaults or NULL depending on schema."
+    },
+    // 149
+    {
+        q: "What this Query do: INSERT INTO Customers (CustomerName, ContactName, Address, City, PostalCode, Country) VALUES ('Cardinal', 'Tom B. Erichsen', 'Skagen 21', 'Stavanger', '4006', 'Norway'), ('Greasy Burger', 'Per Olsen', 'Gateveien 15', 'Sandnes', '4306', 'Norway'), ('Tasty Tee', 'Finn Egan', 'Streetroad 19B', 'Liverpool', 'L1 0AA', 'UK');",
+        options: [
+            "Updates three rows",
+            "Inserts three new rows",
+            "Creates three new tables",
+            "Deletes three rows"
+        ],
+        answer: 1,
+        explanation: "Multi-values INSERT adds multiple rows in one statement."
+    },
+    // 150
+    {
+        q: "What this Query do: SELECT * FROM Customers WHERE NOT Country = 'Spain';",
+        options: [
+            "Selects only Spain",
+            "Selects customers where Country ≠ 'Spain'",
+            "Syntax error",
+            "Deletes Spain customers"
+        ],
+        answer: 1,
+        explanation: "NOT (Country = 'Spain') is equivalent to Country <> 'Spain'."
+    },
+    // 151
+    {
+        q: "What this Query do: SELECT * FROM Customers WHERE CustomerName NOT LIKE 'A%';",
+        options: [
+            "Name starts with 'A'",
+            "Name does not start with 'A'",
+            "Name equals 'A'",
+            "Name ends with 'A'"
+        ],
+        answer: 1,
+        explanation: "NOT LIKE negates the pattern."
+    },
+    // 152
+    {
+        q: "What this Query do: SELECT * FROM Customers WHERE CustomerID NOT BETWEEN 10 AND 60;",
+        options: [
+            "CustomerID between 10 and 60",
+            "CustomerID <10 or >60",
+            "CustomerID = 10 or 60 only",
+            "CustomerID NULL only"
+        ],
+        answer: 1,
+        explanation: "NOT BETWEEN selects values outside the inclusive range."
+    },
+    // 153
+    {
+        q: "What this Query do: SELECT * FROM Customers WHERE City NOT IN ('Paris', 'London');",
+        options: [
+            "Only Paris and London",
+            "All cities except Paris and London",
+            "Only NULL city",
+            "Creates a city index"
+        ],
+        answer: 1,
+        explanation: "NOT IN excludes the listed values."
+    },
+    // 154
+    {
+        q: "What this Query do: SELECT * FROM Customers WHERE NOT CustomerID > 50;",
+        options: [
+            "CustomerID >= 50",
+            "CustomerID <= 50 (NULLs are not returned)",
+            "CustomerID = 50 only",
+            "All rows"
+        ],
+        answer: 1,
+        explanation: "NOT (ID > 50) is equivalent to ID <= 50; NULL evaluates unknown → filtered out."
+    },
+    // 155
+    {
+        q: "What this Query do: SELECT * FROM Customers WHERE NOT CustomerId < 50;",
+        options: [
+            "CustomerID < 50",
+            "CustomerID >= 50 (NULLs filtered)",
+            "CustomerID = 50 only",
+            "All rows"
+        ],
+        answer: 1,
+        explanation: "NOT (ID < 50) ≡ ID >= 50; NULL remains unknown (filtered)."
+    },
+    // 156
+    {
+        q: "What this Query do: SELECT * FROM Customers WHERE Country = 'Germany' OR Country = 'Spain';",
+        options: [
+            "Both must be true",
+            "Either Germany or Spain",
+            "Only Spain",
+            "Neither Germany nor Spain"
+        ],
+        answer: 1,
+        explanation: "OR passes if either predicate is TRUE."
+    },
+    // 157
+    {
+        q: "What this Query do: SELECT * FROM Customers WHERE City = 'Berlin' OR CustomerName LIKE 'G%' OR Country = 'Norway';",
+        options: [
+            "All three conditions must be true",
+            "Any of the three conditions can be true",
+            "Only Berlin and Norway together",
+            "Only names starting with G"
+        ],
+        answer: 1,
+        explanation: "OR of three predicates."
+    },
+    // 158
+    {
+        q: "What this Query do: SELECT * FROM Customers WHERE Country = 'Spain' AND (CustomerName LIKE 'G%' OR CustomerName LIKE 'R%');",
+        options: [
+            "Spain and name starts with G or R",
+            "Spain or name starts with G or R",
+            "Only name starts with R",
+            "Only name starts with G"
+        ],
+        answer: 0,
+        explanation: "Parentheses bind OR together with Spain via AND."
+    },
+    // 159
+    {
+        q: "What this Query do: SELECT * FROM Customers WHERE Country = 'Spain' AND CustomerName LIKE 'G%' OR CustomerName LIKE 'R%';",
+        options: [
+            "Spain AND (G% OR R%)",
+            "Spain AND G% OR R% (so also includes any R% regardless of country)",
+            "Only Spain and R%",
+            "Only Spain and G%"
+        ],
+        answer: 1,
+        explanation: "AND has higher precedence than OR → (Spain AND G%) OR (R% anywhere)."
+    },
+    // 160
+    {
+        q: "What this Query do: SELECT * FROM Customers WHERE Country = 'Spain' AND CustomerName LIKE 'G%';",
+        options: [
+            "Only Spain",
+            "Only names starting with G",
+            "Spain with names starting with G",
+            "Spain with names starting with R"
+        ],
+        answer: 2,
+        explanation: "Both conditions must be true."
+    },
+    // 161
+    {
+        q: "What this Query do: SELECT * FROM Customers WHERE Country = 'Brazil' AND City = 'Rio de Janeiro' AND CustomerID > 50;",
+        options: [
+            "Brazil OR Rio OR ID>50",
+            "Brazil AND Rio AND ID>50",
+            "Only Rio customers",
+            "Only ID>50 customers"
+        ],
+        answer: 1,
+        explanation: "Conjunction of three predicates."
+    },
+    // 162 (same as 158)
+    {
+        q: "What this Query do: SELECT * FROM Customers WHERE Country = 'Spain' AND (CustomerName LIKE 'G%' OR CustomerName LIKE 'R%');",
+        options: [
+            "Spain and name starts with G or R",
+            "Spain or name starts with G or R",
+            "Only name starts with R",
+            "Only name starts with G"
+        ],
+        answer: 0,
+        explanation: "Same as #158; parentheses keep OR together with Spain via AND."
+    },
+    // 163 (same as 159)
+    {
+        q: "What this Query do: SELECT * FROM Customers WHERE Country = 'Spain' AND CustomerName LIKE 'G%' OR CustomerName LIKE 'R%';",
+        options: [
+            "Spain AND (G% OR R%)",
+            "Spain AND G% OR R% (so also includes any R% regardless of country)",
+            "Only Spain and R%",
+            "Only Spain and G%"
+        ],
+        answer: 1,
+        explanation: "Operator precedence yields (Spain AND G%) OR (R% anywhere)."
+    },
+    // 164
+    {
+        q: "What this Query do: SELECT * FROM Products ORDER BY Price;",
+        options: [
+            "Sorts by price descending",
+            "Sorts by price ascending (default)",
+            "No sorting",
+            "Groups by price"
+        ],
+        answer: 1,
+        explanation: "ORDER BY defaults to ASC."
+    },
+    // 165
+    {
+        q: "What this Query do: SELECT * FROM Products ORDER BY Price DESC;",
+        options: [
+            "Sorts by price ascending",
+            "Sorts by price descending",
+            "Random order",
+            "Groups by price"
+        ],
+        answer: 1,
+        explanation: "DESC = descending."
+    },
+    // 166
+    {
+        q: "What this Query do: SELECT * FROM Products ORDER BY ProductName;",
+        options: [
+            "Sorts by ProductName ascending",
+            "Sorts by ProductName descending",
+            "No sorting",
+            "Filters by ProductName"
+        ],
+        answer: 0,
+        explanation: "Alphabetical A→Z unless DESC specified."
+    },
+    // 167
+    {
+        q: "What this Query do: SELECT * FROM Products ORDER BY ProductName DESC;",
+        options: [
+            "Sorts A→Z",
+            "Sorts Z→A",
+            "No sorting",
+            "Filters by name"
+        ],
+        answer: 1,
+        explanation: "DESC reverses order."
+    },
+    // 168
+    {
+        q: "What this Query do: SELECT * FROM Customers ORDER BY Country, CustomerName;",
+        options: [
+            "Sorts by CustomerName only",
+            "Sorts by Country ASC, then CustomerName ASC",
+            "Sorts by Country DESC",
+            "Groups by Country"
+        ],
+        answer: 1,
+        explanation: "Multi-key ascending by default."
+    },
+    // 169
+    {
+        q: "What this Query do: SELECT * FROM Customers ORDER BY Country ASC, CustomerName DESC;",
+        options: [
+            "Country ASC and Name DESC within each country",
+            "Both ASC",
+            "Both DESC",
+            "Random order"
+        ],
+        answer: 0,
+        explanation: "Direction can be set per column."
+    },
+    // 170
+    {
+        q: "What this Query do: SELECT * FROM Customers WHERE Country='Mexico';",
+        options: [
+            "All customers",
+            "Only customers from Mexico",
+            "Only customers not from Mexico",
+            "Creates an index"
+        ],
+        answer: 1,
+        explanation: "Filters by equality."
+    },
+    // 171
+    {
+        q: "What this Query do: SELECT * FROM Customers WHERE CustomerID=1;",
+        options: [
+            "All IDs",
+            "Only the row whose ID = 1",
+            "IDs greater than 1",
+            "Deletes ID 1"
+        ],
+        answer: 1,
+        explanation: "Filters by exact match."
+    },
+    // 172
+    {
+        q: "What this Query do: SELECT * FROM Customers WHERE CustomerID > 80;",
+        options: [
+            "IDs ≥ 80",
+            "IDs > 80",
+            "IDs < 80",
+            "All IDs"
+        ],
+        answer: 1,
+        explanation: "Strictly greater than."
+    },
+    // 173
+    {
+        q: "What this Query do: SELECT DISTINCT Country FROM Customers;",
+        options: [
+            "All countries (with duplicates)",
+            "Unique list of countries",
+            "Countries sorted only",
+            "Creates a view of countries"
+        ],
+        answer: 1,
+        explanation: "DISTINCT removes duplicates."
+    },
+    // 174
+    {
+        q: "What this Query do: SELECT Country FROM Customers;",
+        options: [
+            "Unique list of countries",
+            "Countries (may include duplicates)",
+            "Sorted countries only",
+            "Remaps country names"
+        ],
+        answer: 1,
+        explanation: "No DISTINCT → duplicates allowed."
+    },
+    // 175
+    {
+        q: "What this Query do: SELECT CustomerName, City FROM Customers;",
+        options: [
+            "All columns",
+            "Only CustomerName and City",
+            "Only City",
+            "Deletes other columns"
+        ],
+        answer: 1,
+        explanation: "Selects specified columns."
+    },
+    // 176
+    {
+        q: "What this Query do: SELECT * FROM Customers;",
+        options: [
+            "No rows returned",
+            "All rows and columns",
+            "Only first row",
+            "Drops table"
+        ],
+        answer: 1,
+        explanation: "* selects all columns."
+    },
+    // 177
+    {
+        q: "What this Query do: DROP DATABASE testDB;",
+        options: [
+            "Drops one table",
+            "Drops entire database (subject to privileges/locks)",
+            "Backs up the database",
+            "Creates database"
+        ],
+        answer: 1,
+        explanation: "Removes DB and its objects per engine rules."
+    },
+    // 178
+    {
+        q: "What this Query do: CREATE TABLE Persons ( PersonID int, LastName varchar(255), FirstName varchar(255), Address varchar(255), City varchar(255) );",
+        options: [
+            "Inserts a row",
+            "Creates a table schema",
+            "Drops a table",
+            "Creates a view"
+        ],
+        answer: 1,
+        explanation: "DDL to create a new table."
+    },
+    // 179
+    {
+        q: "What this Query do: CREATE TABLE TestTable AS SELECT customername, contactname FROM customers;",
+        options: [
+            "Updates customers",
+            "Creates a new table populated from a SELECT",
+            "Creates a view",
+            "Deletes rows from customers"
+        ],
+        answer: 1,
+        explanation: "CTAS copies query result into a new physical table (dialect support varies)."
+    },
+    // 180
+    {
+        q: "What this Query do: DROP TABLE Shippers;",
+        options: [
+            "Deletes rows but keeps table",
+            "Drops the table object",
+            "Truncates table only",
+            "Creates table"
+        ],
+        answer: 1,
+        explanation: "DROP removes the table definition and data."
+    },
+    // 181
+    {
+        q: "What this Query do: ALTER TABLE Customers ADD Email varchar(255);",
+        options: [
+            "Adds a new row",
+            "Adds a new column Email",
+            "Drops column Email",
+            "Renames table to Email"
+        ],
+        answer: 1,
+        explanation: "ALTER TABLE … ADD COLUMN."
+    },
+    // 182
+    {
+        q: "What this Query do: ALTER TABLE Customers DROP COLUMN Email;",
+        options: [
+            "Drops the table",
+            "Drops the Email column",
+            "Adds Email column",
+            "Deletes email rows"
+        ],
+        answer: 1,
+        explanation: "Removes the column definition and its data."
+    },
+    // 183
+    {
+        q: "What this Query do: SELECT * INTO CustomersBackup2017 FROM Customers;",
+        options: [
+            "Appends rows into Customers",
+            "Creates a new table CustomersBackup2017 from Customers (SQL Server/Access)",
+            "Creates a view",
+            "Updates CustomersBackup2017"
+        ],
+        answer: 1,
+        explanation: "SELECT INTO creates a new table and copies data (dialect-specific)."
+    },
+    // 184
+    {
+        q: "What this Query do: SELECT * INTO CustomersGermany FROM Customers WHERE Country = 'Germany';",
+        options: [
+            "Deletes German customers",
+            "Creates a new table with only German customers (SQL Server/Access)",
+            "Creates a view of German customers",
+            "Updates CustomersGermany"
+        ],
+        answer: 1,
+        explanation: "Filtered SELECT INTO."
+    },
+    // 185
+    {
+        q: "What this Query do: SELECT SupplierName FROM Suppliers WHERE EXISTS (SELECT ProductName FROM Products WHERE Products.SupplierID = Suppliers.supplierID AND Price < 20);",
+        options: [
+            "Suppliers with no products",
+            "Suppliers with at least one product priced < 20",
+            "All suppliers",
+            "Only suppliers with products = NULL"
+        ],
+        answer: 1,
+        explanation: "EXISTS is TRUE if the subquery returns at least one row."
+    }
 ];
 
 // --- Timer helpers (NEW) ---
